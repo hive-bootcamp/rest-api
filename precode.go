@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -55,15 +55,16 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 
 func postTask(w http.ResponseWriter, r *http.Request) {
 	var task Task
-	var buf bytes.Buffer
 
-	_, err := buf.ReadFrom(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(buf.Bytes(), &task)
+	defer r.Body.Close()
+
+	err = json.Unmarshal(body, &task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
